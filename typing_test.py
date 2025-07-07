@@ -1,4 +1,4 @@
-import tkinter as tk
+import streamlit as st
 import time
 import random
 
@@ -11,20 +11,21 @@ sentences = [
     "Streamlining your workflow boosts productivity."
 ]
 
-def get_motivational_feedback(wpm, accuracy):
+# Feedback functions
+def get_motivational_feedback(wpm):
     if wpm >= 80:
         return "🚀 Typing Titan! Incredible speed!"
     elif wpm >= 60:
-        return "🔥 You’re on fire! Keep it up!"
+        return "🔥 You're on fire! Keep it up!"
     elif wpm >= 40:
         return "⚡ Solid performance—aim higher!"
     else:
         return "💡 Don’t worry—practice makes perfect!"
 
-def get_accuracy_feedback(accuracy):
-    if accuracy >= 95:
+def get_accuracy_feedback(acc):
+    if acc >= 95:
         return "🎯 Sharp accuracy!"
-    elif accuracy >= 80:
+    elif acc >= 80:
         return "✅ Great effort—almost there!"
     else:
         return "🧠 Take your time and focus!"
@@ -39,122 +40,74 @@ def get_medal(wpm):
     else:
         return "🎓 Keep Practicing"
 
-class TypingSpeedTestApp:
-    def __init__(self, master):
-        self.master = master
-        self.master.title("Jaweria's Typing Speed Game 👩‍💻")
-        self.master.geometry("700x600")
-        self.sentence = random.choice(sentences)
-        self.start_time = None
-        self.best_wpm = 0
-        self.streak = 0
+# Session state init
+if "start_time" not in st.session_state:
+    st.session_state.start_time = None
+if "sentence" not in st.session_state:
+    st.session_state.sentence = random.choice(sentences)
+if "best_wpm" not in st.session_state:
+    st.session_state.best_wpm = 0
+if "streak" not in st.session_state:
+    st.session_state.streak = 0
 
-        # 🌟 Welcome Banner
-        self.greeting = tk.Label(master, text="✨ Welcome to Jaweria’s Typing Speed Game!", font=("Helvetica", 15, "bold"), fg="purple")
-        self.greeting.pack(pady=10)
+st.title("✨ Welcome to Jaweria's Typing Speed Game 👩‍💻")
 
-        self.instructions = tk.Label(master, text="Type the sentence below as fast and accurately as you can:",
-                                     font=("Helvetica", 12))
-        self.instructions.pack(pady=5)
+st.markdown("#### 🔔 Challenge: Beat your best speed!")
+st.markdown("**Type the sentence below as fast and accurately as you can:**")
 
-        self.challenge_label = tk.Label(master, text="🔔 Challenge: Beat your best speed!", font=("Helvetica", 11), fg="darkgreen")
-        self.challenge_label.pack()
+st.code(st.session_state.sentence, language="")
 
-        self.display = tk.Label(master, text=self.sentence, wraplength=640, font=("Courier", 14), fg="navy")
-        self.display.pack(pady=10)
+user_input = st.text_area("Start typing here:", height=100)
 
-        self.input_box = tk.Text(master, height=4, font=("Courier", 12), wrap="word")
-        self.input_box.pack(pady=10)
-        self.input_box.bind("<FocusIn>", self.start_timer)
+if st.button("✅ Finish Test"):
+    if st.session_state.start_time is None:
+        st.warning("Click inside the box and start typing first!")
+    else:
+        end_time = time.time()
+        duration = end_time - st.session_state.start_time
+        typed = user_input.strip()
+        word_count = len(typed.split())
+        wpm = round((word_count / duration) * 60)
 
-        self.result_btn = tk.Button(master, text="Finish Test", command=self.calculate_results)
-        self.result_btn.pack(pady=6)
+        correct_chars = sum(1 for i, c in enumerate(typed) if i < len(st.session_state.sentence) and c == st.session_state.sentence[i])
+        accuracy = round((correct_chars / len(st.session_state.sentence)) * 100)
 
-        self.results = tk.Label(master, text="", font=("Helvetica", 12, "bold"))
-        self.results.pack(pady=10)
+        st.markdown(f"### 📊 Results")
+        st.success(f"Speed: **{wpm} WPM**  |  Accuracy: **{accuracy}%**  |  {get_medal(wpm)}")
+        st.info(get_motivational_feedback(wpm) + "  \n" + get_accuracy_feedback(accuracy))
 
-        self.feedback = tk.Label(master, text="", font=("Helvetica", 11))
-        self.feedback.pack()
-
-        self.streak_label = tk.Label(master, text="", font=("Helvetica", 10, "italic"))
-        self.streak_label.pack(pady=5)
-
-        self.mistake_label = tk.Text(master, height=5, font=("Courier", 11), wrap="word", bg="#fff0f0")
-        self.mistake_label.pack(pady=10)
-        self.mistake_label.config(state="disabled")
-
-        self.reset_btn = tk.Button(master, text="🎯 Try Another Sentence", command=self.reset_game)
-        self.reset_btn.pack(pady=10)
-
-        self.footer = tk.Label(master, text="Made with ❤️ by Jaweria", font=("Helvetica", 9))
-        self.footer.pack(side="bottom", pady=5)
-
-    def start_timer(self, event):
-        if not self.start_time:
-            self.start_time = time.time()
-
-    def calculate_results(self):
-        typed = self.input_box.get("1.0", tk.END).strip()
-        time_taken = time.time() - self.start_time if self.start_time else 1
-        words_typed = len(typed.split())
-        wpm = round((words_typed / time_taken) * 60)
-
-        correct_chars = sum(1 for i, c in enumerate(typed) if i < len(self.sentence) and c == self.sentence[i])
-        accuracy = round((correct_chars / len(self.sentence)) * 100)
-
-        feedback = get_motivational_feedback(wpm, accuracy)
-        medal = get_medal(wpm)
-        accuracy_msg = get_accuracy_feedback(accuracy)
-
-        if wpm > self.best_wpm:
-            self.best_wpm = wpm
-            self.streak += 1
-            streak_msg = f"🔁 New streak: {self.streak} 🌟 Personal best!"
+        if wpm > st.session_state.best_wpm:
+            st.session_state.best_wpm = wpm
+            st.session_state.streak += 1
+            st.success(f"🌟 New Personal Best! 🔁 Streak: {st.session_state.streak}")
         else:
-            self.streak = 0
-            streak_msg = "🔄 Reset streak. Let’s beat that score!"
+            st.session_state.streak = 0
+            st.write("🔄 Streak reset. Try again!")
 
-        self.results.config(text=f"Speed: {wpm} WPM   |   Accuracy: {accuracy}%   |   {medal}")
-        self.feedback.config(text=f"{feedback}\n{accuracy_msg}")
-        self.streak_label.config(text=streak_msg)
-
-        self.show_mistakes(typed)
-
-    def show_mistakes(self, typed_text):
-        self.mistake_label.config(state="normal")
-        self.mistake_label.delete("1.0", tk.END)
-
-        # Visual comparison: show mistakes in red
-        mistake_display = ""
-        for i in range(len(self.sentence)):
-            if i < len(typed_text):
-                if typed_text[i] == self.sentence[i]:
-                    mistake_display += typed_text[i]
+        # Mistake display
+        mistake_display = []
+        for i in range(len(st.session_state.sentence)):
+            if i < len(typed):
+                if typed[i] == st.session_state.sentence[i]:
+                    mistake_display.append(typed[i])
                 else:
-                    mistake_display += f"❌{typed_text[i]}"
+                    mistake_display.append(f"❌{typed[i]}")
             else:
-                mistake_display += "⬜"
+                mistake_display.append("⬜")
+        if len(typed) > len(st.session_state.sentence):
+            mistake_display.append(f" ➕Extra: {typed[len(st.session_state.sentence):]}")
 
-        if len(typed_text) > len(self.sentence):
-            mistake_display += f" ➕Extra: {typed_text[len(self.sentence):]}"
+        st.markdown("#### 🔎 Mistake Viewer")
+        st.code("".join(mistake_display), language="")
 
-        self.mistake_label.insert(tk.END, f"Typed vs. Actual:\n{mistake_display}\n")
-        self.mistake_label.config(state="disabled")
+if st.button("🔄 Try Another Sentence"):
+    st.session_state.sentence = random.choice(sentences)
+    st.session_state.start_time = None
+    st.experimental_rerun()
 
-    def reset_game(self):
-        self.sentence = random.choice(sentences)
-        self.display.config(text=self.sentence)
-        self.input_box.delete("1.0", tk.END)
-        self.results.config(text="")
-        self.feedback.config(text="")
-        self.streak_label.config(text="")
-        self.challenge_label.config(text="🔔 Challenge: Beat your best speed!")
-        self.mistake_label.config(state="normal")
-        self.mistake_label.delete("1.0", tk.END)
-        self.mistake_label.config(state="disabled")
-        self.start_time = None
+# Start timer only when typing begins
+if user_input and st.session_state.start_time is None:
+    st.session_state.start_time = time.time()
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = TypingSpeedTestApp(root)
-    root.mainloop()
+st.markdown("---")
+st.caption("Made with ❤️ by Jaweria")
