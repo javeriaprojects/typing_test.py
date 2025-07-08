@@ -104,7 +104,7 @@ if st.button("✅ Finish Test"):
                 st.success(f"🎉 You’ve leveled up to {levels[st.session_state.level]['name']}!")
                 st.session_state.sentence = random.choice(levels[st.session_state.level]['sentences'])
                 st.session_state.start_time = None
-                st.experimental_rerun()  # 👈 This is the key fix!
+                st.rerun() # 👈 This is the key fix!
             else:
                 st.balloons()
                 st.success("🏆 You’ve completed all levels! You’re officially a Typing Grandmaster!")
