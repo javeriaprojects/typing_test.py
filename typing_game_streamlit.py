@@ -69,7 +69,7 @@ def get_medal(score):
 
 # UI
 st.title("✨ Jaweria's Typing Quest 👩‍💻")
-st.caption("🧪 Version 1.6 – Levels, Twisters, Timer & More!")  # 👈 New version caption here!
+st.caption("🧪 Version 1.6 – Levels, Twisters, Timer & More!")
 st.markdown(f"### 🧱 {levels[st.session_state.level]['name']}")
 st.markdown(f"**🎯 Goal: {levels[st.session_state.level]['min_wpm']}+ WPM & {levels[st.session_state.level]['min_acc']}% Accuracy**")
 st.code(st.session_state.sentence)
@@ -104,7 +104,7 @@ if st.button("✅ Finish Test"):
                 st.success(f"🎉 You’ve leveled up to {levels[st.session_state.level]['name']}!")
                 st.session_state.sentence = random.choice(levels[st.session_state.level]['sentences'])
                 st.session_state.start_time = None
-                st.stop()
+                st.experimental_rerun()  # 👈 This is the key fix!
             else:
                 st.balloons()
                 st.success("🏆 You’ve completed all levels! You’re officially a Typing Grandmaster!")
