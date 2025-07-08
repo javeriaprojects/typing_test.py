@@ -2,8 +2,8 @@ import streamlit as st
 import time
 import random
 
-# Sentences to choose from
-sentences = [
+# ✍️ Sentence categories
+normal_sentences = [
     "The quick brown fox jumps over the lazy dog.",
     "Typing is a fundamental skill in the digital age.",
     "Python makes programming accessible and fun.",
@@ -11,7 +11,20 @@ sentences = [
     "Streamlining your workflow boosts productivity."
 ]
 
-# Feedback functions
+tongue_twisters = [
+    "She sells seashells by the seashore.",
+    "How much wood would a woodchuck chuck if a woodchuck could chuck wood?",
+    "Peter Piper picked a peck of pickled peppers.",
+    "Fuzzy Wuzzy was a bear. Fuzzy Wuzzy had no hair. Fuzzy Wuzzy wasn't very fuzzy, was he?",
+    "I scream, you scream, we all scream for ice cream!"
+]
+
+# 🎛 Difficulty selection
+difficulty = st.selectbox("Select difficulty level:", ["Normal", "Tongue Twister"])
+
+sentences = normal_sentences if difficulty == "Normal" else tongue_twisters
+
+# 🧠 Feedback logic
 def get_motivational_feedback(wpm):
     if wpm >= 80:
         return "🚀 Typing Titan! Incredible speed!"
@@ -30,30 +43,29 @@ def get_accuracy_feedback(acc):
     else:
         return "🧠 Take your time and focus!"
 
-def get_medal(wpm):
-    if wpm >= 80:
+def get_medal(score):
+    if score >= 80:
         return "🥇 Gold Medal"
-    elif wpm >= 60:
+    elif score >= 60:
         return "🥈 Silver Medal"
-    elif wpm >= 40:
+    elif score >= 40:
         return "🥉 Bronze Medal"
     else:
         return "🎓 Keep Practicing"
 
-# Session state init
+# 🧾 Session state
 if "start_time" not in st.session_state:
     st.session_state.start_time = None
 if "sentence" not in st.session_state:
     st.session_state.sentence = random.choice(sentences)
-if "best_wpm" not in st.session_state:
-    st.session_state.best_wpm = 0
+if "best_score" not in st.session_state:
+    st.session_state.best_score = 0
 if "streak" not in st.session_state:
     st.session_state.streak = 0
 
 st.title("✨ Welcome to Jaweria's Typing Speed Game 👩‍💻")
-
-st.markdown("#### 🔔 Challenge: Beat your best speed!")
-st.markdown("**Type the sentence below as fast and accurately as you can:**")
+st.markdown("#### 🔔 Challenge: Beat your best score!")
+st.markdown(f"**Type this{' tongue twister' if difficulty == 'Tongue Twister' else ''} as fast and accurately as you can:**")
 
 st.code(st.session_state.sentence, language="")
 
@@ -69,22 +81,29 @@ if st.button("✅ Finish Test"):
         word_count = len(typed.split())
         wpm = round((word_count / duration) * 60)
 
-        correct_chars = sum(1 for i, c in enumerate(typed) if i < len(st.session_state.sentence) and c == st.session_state.sentence[i])
+        correct_chars = sum(
+            1 for i, c in enumerate(typed)
+            if i < len(st.session_state.sentence) and c == st.session_state.sentence[i]
+        )
         accuracy = round((correct_chars / len(st.session_state.sentence)) * 100)
+        effective_score = round((accuracy * min(1, wpm / 60)))
 
-        st.markdown(f"### 📊 Results")
-        st.success(f"Speed: **{wpm} WPM**  |  Accuracy: **{accuracy}%**  |  {get_medal(wpm)}")
-        st.info(get_motivational_feedback(wpm) + "  \n" + get_accuracy_feedback(accuracy))
+        # Results
+        st.markdown("### 📊 Results")
+        st.success(f"Speed: **{wpm} WPM** | Accuracy: **{accuracy}%** | Time: **{round(duration, 2)} sec**")
+        st.info(f"{get_motivational_feedback(wpm)}\n\n{get_accuracy_feedback(accuracy)}")
+        st.write(f"🏁 **Effective Score**: {effective_score} | {get_medal(effective_score)}")
 
-        if wpm > st.session_state.best_wpm:
-            st.session_state.best_wpm = wpm
+        if effective_score > st.session_state.best_score:
+            st.session_state.best_score = effective_score
             st.session_state.streak += 1
+            st.balloons()
             st.success(f"🌟 New Personal Best! 🔁 Streak: {st.session_state.streak}")
         else:
             st.session_state.streak = 0
             st.write("🔄 Streak reset. Try again!")
 
-        # Mistake display
+        # 🔍 Mistake viewer
         mistake_display = []
         for i in range(len(st.session_state.sentence)):
             if i < len(typed):
@@ -105,7 +124,7 @@ if st.button("🔄 Try Another Sentence"):
     st.session_state.start_time = None
     st.experimental_rerun()
 
-# Start timer only when typing begins
+# ⏱ Timer start trigger
 if user_input and st.session_state.start_time is None:
     st.session_state.start_time = time.time()
 
