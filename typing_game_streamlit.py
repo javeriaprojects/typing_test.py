@@ -30,7 +30,8 @@ levels = {
 if "level" not in st.session_state:
     st.session_state.level = 1
 if "sentence" not in st.session_state:
-    st.session_state.sentence = random.choice(levels[1]["sentences"])
+    current_level = st.session_state.get("level", 1)
+    st.session_state.sentence = random.choice(levels[current_level]["sentences"])
 if "start_time" not in st.session_state:
     st.session_state.start_time = None
 if "best_score" not in st.session_state:
@@ -104,7 +105,7 @@ if st.button("✅ Finish Test"):
                 st.success(f"🎉 You’ve leveled up to {levels[st.session_state.level]['name']}!")
                 st.session_state.sentence = random.choice(levels[st.session_state.level]['sentences'])
                 st.session_state.start_time = None
-                st.rerun() # 👈 This is the key fix!
+                st.rerun()
             else:
                 st.balloons()
                 st.success("🏆 You’ve completed all levels! You’re officially a Typing Grandmaster!")
